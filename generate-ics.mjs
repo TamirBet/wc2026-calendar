@@ -9,12 +9,14 @@ import { teamName, stageName, venue } from "./translations.mjs";
 const SOURCE_URL =
   "https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json";
 
-// נבחרות שמשחקי הבתים שלהן ייכללו (בולטות + שלוש המארחות). שמות לפי המקור.
+// נבחרות שמשחקי הבתים שלהן ייכללו. שמות לפי המקור.
 const BIG_NATIONS = new Set([
   "Brazil", "Argentina", "France", "England", "Spain", "Germany",
-  "Portugal", "Netherlands", "Italy", "Belgium", "Croatia",
-  "USA", "Mexico", "Canada",
+  "Portugal", "Netherlands", "Italy",
 ]);
+
+// משחק הפתיחה (מקסיקו–דרום אפריקה, 11.6, 13:00 UTC-6) — נכלל תמיד.
+const OPENING_MATCH = { date: "2026-06-11", team1: "Mexico", team2: "South Africa" };
 
 // ---- שליפת הנתונים ----
 async function fetchMatches() {
@@ -29,6 +31,7 @@ async function fetchMatches() {
 function isInteresting(m) {
   const isGroup = /^Matchday/.test(m.round);
   if (!isGroup) return true; // כל הנוקאאוט תמיד נכלל
+  if (m.date === OPENING_MATCH.date && m.team1 === OPENING_MATCH.team1) return true; // משחק הפתיחה
   return BIG_NATIONS.has(m.team1) || BIG_NATIONS.has(m.team2);
 }
 
