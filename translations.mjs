@@ -16,7 +16,7 @@ export const NATIONS = {
   "Croatia": "קרואטיה",
   "Curaçao": "קוראסאו",
   "Czech Republic": "צ'כיה",
-  "DR Congo": "קונגו (DR)",
+  "DR Congo": "קונגו הדמוקרטית",
   "Ecuador": "אקוודור",
   "Egypt": "מצרים",
   "England": "אנגליה",
