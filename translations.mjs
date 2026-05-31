@@ -83,14 +83,21 @@ export const STAGES = {
   "Final":                "הגמר",
 };
 
+// המרת אות לטינית לאות עברית (A→א, B→ב, ...)
+const GROUP_LETTERS = { A:"א", B:"ב", C:"ג", D:"ד", E:"ה", F:"ו", G:"ז", H:"ח", I:"ט", J:"י", K:"כ", L:"ל" };
+function groupLetter(l) { return GROUP_LETTERS[l] || l; }
+
 // תרגום שם קבוצה — כולל placeholders של הנוקאאוט.
 export function teamName(t) {
   if (NATIONS[t]) return NATIONS[t];
   // placeholders: "1A" מנצחת בית, "2B" סגנית בית
   let m = /^([12])([A-L])$/.exec(t);
-  if (m) return (m[1] === "1" ? "מנצחת בית " : "סגנית בית ") + m[2];
+  if (m) return (m[1] === "1" ? "מנצחת בית " : "סגנית בית ") + groupLetter(m[2]);
   // "3A/B/C/D/F" — אחת מהמדורגות השלישיות
-  if (/^3[A-L/]+$/.test(t)) return "מדורגת 3 (בתים " + t.slice(1) + ")";
+  if (/^3[A-L/]+$/.test(t)) {
+    const letters = t.slice(1).split("/").map(groupLetter).join("/");
+    return "מדורגת 3 (בתים " + letters + ")";
+  }
   // "W74" מנצחת משחק, "L101" מפסידת משחק
   m = /^W(\d+)$/.exec(t); if (m) return "מנצחת משחק " + m[1];
   m = /^L(\d+)$/.exec(t); if (m) return "מפסידת משחק " + m[1];
@@ -102,7 +109,7 @@ export function stageName(round, group) {
   if (STAGES[round]) return STAGES[round];
   const m = /^Matchday\s+(\d+)$/.exec(round);
   if (m) {
-    const g = group ? " (" + group.replace("Group", "בית") + ")" : "";
+    const g = group ? " (בית " + groupLetter(group.replace("Group ", "")) + ")" : "";
     return "שלב הבתים – מחזור " + m[1] + g;
   }
   return round; // fallback
