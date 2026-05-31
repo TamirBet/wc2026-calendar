@@ -1,0 +1,42 @@
+name: Build World Cup 2026 calendar
+
+# מריץ את הסקריפט פעמיים ביום, מייצר worldcup.ics ומפרסם אותו.
+# כך הלוח בטלפון מתעדכן אוטומטית כשנבחרות עולות לשלבי הנוקאאוט.
+on:
+  schedule:
+    - cron: "0 6,18 * * *"   # 06:00 ו-18:00 UTC כל יום
+  workflow_dispatch: {}       # הרצה ידנית מתפריט Actions
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-ics
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Generate worldcup.ics
+        run: node generate-ics.mjs
+
+      - name: Commit if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if [ -n "$(git status --porcelain worldcup.ics)" ]; then
+            git add worldcup.ics
+            git commit -m "Update worldcup.ics ($(date -u +%Y-%m-%dT%H:%MZ))"
+            git push
+          else
+            echo "No changes to worldcup.ics"
+          fi
