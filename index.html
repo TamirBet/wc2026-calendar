@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>לוח שנה מונדיאל 2026 🏆</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, "Segoe UI", Arial, sans-serif;
+      background: linear-gradient(135deg, #0a1628 0%, #1a3a6e 60%, #0a1628 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      color: #fff;
+    }
+
+    .card {
+      background: rgba(255,255,255,0.07);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 24px;
+      max-width: 480px;
+      width: 100%;
+      padding: 40px 32px 36px;
+      text-align: center;
+    }
+
+    .trophy { font-size: 64px; line-height: 1; margin-bottom: 16px; }
+
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 800;
+      margin-bottom: 6px;
+      letter-spacing: -0.5px;
+    }
+
+    .subtitle {
+      font-size: 1rem;
+      color: rgba(255,255,255,0.65);
+      margin-bottom: 28px;
+    }
+
+    .features {
+      background: rgba(255,255,255,0.06);
+      border-radius: 14px;
+      padding: 18px 20px;
+      text-align: right;
+      margin-bottom: 28px;
+      font-size: 0.92rem;
+      line-height: 2;
+      color: rgba(255,255,255,0.85);
+    }
+    .features li { list-style: none; }
+    .features li::before { content: "✓  "; color: #4ade80; font-weight: 700; }
+
+    .btn-main {
+      display: block;
+      width: 100%;
+      padding: 16px;
+      border-radius: 14px;
+      border: none;
+      background: linear-gradient(135deg, #f59e0b, #ef4444);
+      color: #fff;
+      font-size: 1.1rem;
+      font-weight: 800;
+      cursor: pointer;
+      text-decoration: none;
+      margin-bottom: 12px;
+      transition: opacity 0.15s;
+    }
+    .btn-main:hover { opacity: 0.88; }
+
+    .btn-google {
+      display: block;
+      width: 100%;
+      padding: 14px;
+      border-radius: 14px;
+      border: 1.5px solid rgba(255,255,255,0.3);
+      background: transparent;
+      color: #fff;
+      font-size: 0.97rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      margin-bottom: 20px;
+      transition: background 0.15s;
+    }
+    .btn-google:hover { background: rgba(255,255,255,0.1); }
+
+    .url-box {
+      background: rgba(0,0,0,0.3);
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.55);
+      word-break: break-all;
+      text-align: left;
+      direction: ltr;
+      cursor: pointer;
+      border: 1px solid rgba(255,255,255,0.1);
+      transition: border-color 0.15s;
+    }
+    .url-box:hover { border-color: rgba(255,255,255,0.3); }
+    .copy-hint {
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.4);
+      margin-top: 6px;
+    }
+    .copied { color: #4ade80 !important; }
+
+    .divider {
+      font-size: 0.78rem;
+      color: rgba(255,255,255,0.35);
+      margin: 6px 0 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="trophy">🏆</div>
+    <h1>מונדיאל 2026</h1>
+    <p class="subtitle">לוח שנה חינמי למשחקים הבולטים</p>
+
+    <ul class="features">
+      <li>כל משחקי הנוקאאוט (32 → גמר)</li>
+      <li>משחקי בתים של נבחרות מובילות</li>
+      <li>שעת ישראל לכל משחק</li>
+      <li>אצטדיון ועיר בהערות</li>
+      <li>מתעדכן אוטומטית עם הנבחרות</li>
+    </ul>
+
+    <!-- iPhone / iPad / Mac -->
+    <a class="btn-main" href="webcal://tamirbet.github.io/wc2026-calendar/worldcup.ics">
+      📅&nbsp; הירשם ללוח — iPhone / iPad / Mac
+    </a>
+
+    <!-- Google Calendar -->
+    <a class="btn-google"
+       href="https://calendar.google.com/calendar/r?cid=webcal://tamirbet.github.io/wc2026-calendar/worldcup.ics"
+       target="_blank" rel="noopener">
+      הירשם דרך Google Calendar
+    </a>
+
+    <div class="divider">או העתק את הקישור ידנית</div>
+
+    <div class="url-box" id="urlBox" onclick="copyUrl()" title="לחץ להעתקה">
+      webcal://tamirbet.github.io/wc2026-calendar/worldcup.ics
+    </div>
+    <p class="copy-hint" id="copyHint">לחץ להעתקה</p>
+  </div>
+
+  <script>
+    function copyUrl() {
+      const url = "webcal://tamirbet.github.io/wc2026-calendar/worldcup.ics";
+      navigator.clipboard.writeText(url).then(() => {
+        const hint = document.getElementById("copyHint");
+        hint.textContent = "✓ הועתק!";
+        hint.classList.add("copied");
+        setTimeout(() => { hint.textContent = "לחץ להעתקה"; hint.classList.remove("copied"); }, 2500);
+      });
+    }
+  </script>
+</body>
+</html>
