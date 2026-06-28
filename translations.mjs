@@ -75,7 +75,7 @@ export const VENUES = {
 
 // שלבי הטורניר: השדה round → טקסט עברי. למשחקי בתים מטופל בנפרד (כולל מספר המחזור).
 export const STAGES = {
-  "Round of 32":          "שמינית גמר 32",
+  "Round of 32":          "32 האחרונות",
   "Round of 16":          "שמינית הגמר",
   "Quarter-final":        "רבע גמר",
   "Semi-final":           "חצי גמר",

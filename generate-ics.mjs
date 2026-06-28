@@ -1,6 +1,6 @@
 // מייצר קובץ worldcup.ics עם המשחקים הנבחרים של מונדיאל 2026.
 // מקור נתונים: openfootball/worldcup.json (חופשי, ללא מפתח API).
-// כל הנוקאאוט + משחקי בתים של נבחרות בולטות/מארחות. שפה: עברית.
+// כל הנוקאאוט + משחקי בתים של נבחרות בולטות. שפה: עברית.
 //
 // הרצה:  node generate-ics.mjs
 import { writeFileSync } from "node:fs";
@@ -42,7 +42,6 @@ function parseKickoff(dateStr, timeStr) {
   const [, hh, mm, off] = m;
   const sign = off[0] === "-" ? "-" : "+";
   const offh = String(Math.abs(parseInt(off, 10))).padStart(2, "0");
-  // ISO עם offset → JS מחשב את הרגע ב-UTC נכון
   return new Date(`${dateStr}T${hh.padStart(2, "0")}:${mm}:00${sign}${offh}:00`);
 }
 
@@ -51,7 +50,7 @@ function icsUTC(d) {
   return d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
 }
 
-// שעת ישראל בעברית: "יום חמישי, 11 ביוני 2026, 22:00"
+// שעת ישראל מלאה: "יום חמישי, 11 ביוני 2026, 22:00"
 const ILfmt = new Intl.DateTimeFormat("he-IL", {
   timeZone: "Asia/Jerusalem",
   weekday: "long", day: "numeric", month: "long", year: "numeric",
@@ -61,13 +60,49 @@ function israelTime(d) {
   return ILfmt.format(d).replace(" בשעה ", ", ");
 }
 
+// שעת ישראל קצרה (ללא שנה): "יום שישי, 4 ביולי, 22:00"
+const ILfmtShort = new Intl.DateTimeFormat("he-IL", {
+  timeZone: "Asia/Jerusalem",
+  weekday: "long", day: "numeric", month: "long",
+  hour: "2-digit", minute: "2-digit", hour12: false,
+});
+function israelTimeShort(d) {
+  return ILfmtShort.format(d).replace(" בשעה ", ", ");
+}
+
+// ---- פתרון "מי תהיה היריבה הבאה" לפי מפתח (W74, L101, או שם אמיתי) ----
+function resolveOpponent(key, matchByNum) {
+  if (!key) return "";
+  // שם אמיתי של נבחרת
+  if (!/^[WL]/.test(key)) return teamName(key);
+  // W{N} = מנצחת משחק N
+  const wm = /^W(\d+)$/.exec(key);
+  if (wm) {
+    const ref = matchByNum[+wm[1]];
+    if (ref && ref.team1 && ref.team2 && !/^[WL]/.test(ref.team1) && !/^[WL]/.test(ref.team2)) {
+      return `מנצחת ${teamName(ref.team1)}–${teamName(ref.team2)}`;
+    }
+    return teamName(key); // fallback: "מנצחת משחק N"
+  }
+  // L{N} = מפסידת משחק N (מופיע רק במשחק המקום השלישי)
+  const lm = /^L(\d+)$/.exec(key);
+  if (lm) {
+    const ref = matchByNum[+lm[1]];
+    if (ref && ref.team1 && ref.team2 && !/^[WL]/.test(ref.team1) && !/^[WL]/.test(ref.team2)) {
+      return `מפסידת ${teamName(ref.team1)}–${teamName(ref.team2)}`;
+    }
+    return teamName(key);
+  }
+  return teamName(key);
+}
+
 // ---- בניית VEVENT ----
 function escapeICS(s) {
   return String(s).replace(/\\/g, "\\\\").replace(/;/g, "\\;")
     .replace(/,/g, "\\,").replace(/\n/g, "\\n");
 }
 
-// קיפול שורות ארוכות לפי RFC 5545 (75 octets, המשך עם רווח מוביל)
+// קיפול שורות ארוכות לפי RFC 5545 (75 octets)
 function fold(line) {
   const bytes = Buffer.from(line, "utf8");
   if (bytes.length <= 75) return line;
@@ -82,7 +117,7 @@ function fold(line) {
   return out.join("\r\n");
 }
 
-function buildEvent(m, idx, stamp) {
+function buildEvent(m, idx, stamp, ctx) {
   const start = parseKickoff(m.date, m.time);
   if (!start) return null;
   const end = new Date(start.getTime() + 2 * 60 * 60 * 1000); // 2 שעות
@@ -93,17 +128,33 @@ function buildEvent(m, idx, stamp) {
   const loc = [v.stadium, [v.city, v.country].filter(Boolean).join(", ")]
     .filter(Boolean).join(" – ");
 
-  const summary = `${t1} נגד ${t2}`;
-  const description = [
+  // ---- מידע בראקט: "המנצחת תפגוש" (למשחקי נוקאאוט בלבד) ----
+  let bracketLine = "";
+  const isGroup = /^Matchday/.test(m.round);
+  if (!isGroup && m.num != null && ctx) {
+    const { matchByNum, feedsInto } = ctx;
+    const nextMatch = feedsInto[`W${m.num}`];
+    if (nextMatch) {
+      const myKey = `W${m.num}`;
+      const opponentKey = nextMatch.team1 === myKey ? nextMatch.team2 : nextMatch.team1;
+      const opponent = resolveOpponent(opponentKey, matchByNum);
+      const nextStart = parseKickoff(nextMatch.date, nextMatch.time);
+      const nextStage = stageName(nextMatch.round, nextMatch.group);
+      const timeStr = nextStart ? israelTimeShort(nextStart) : "";
+      bracketLine = `המנצחת תפגוש: ${opponent} — ${timeStr} [${nextStage}]`;
+    }
+  }
+
+  const descLines = [
     `שלב: ${stage}`,
     `אצטדיון: ${v.stadium}`,
     `מיקום: ${[v.city, v.country].filter(Boolean).join(", ")}`,
     `שעת ישראל: ${israelTime(start)}`,
-    ``,
-    `(${m.team1} vs ${m.team2} — ${m.round})`,
-  ].join("\n");
+  ];
+  if (bracketLine) descLines.push(bracketLine);
+  descLines.push(``, `(${m.team1} vs ${m.team2} — ${m.round})`);
+  const description = descLines.join("\n");
 
-  // UID יציב: num של המשחק אם קיים, אחרת מיקום במערך. כך עדכון נבחרת = החלפה, לא כפילות.
   const uid = `wc2026-${m.num != null ? "m" + m.num : "i" + idx}@openfootball`;
 
   return [
@@ -114,7 +165,7 @@ function buildEvent(m, idx, stamp) {
     `DTEND:${icsUTC(end)}`,
     `SEQUENCE:${Math.floor(Date.now() / 1000)}`,
     `LAST-MODIFIED:${stamp}`,
-    fold(`SUMMARY:${escapeICS(summary)}`),
+    fold(`SUMMARY:${escapeICS(t1 + " נגד " + t2)}`),
     fold(`LOCATION:${escapeICS(loc)}`),
     fold(`DESCRIPTION:${escapeICS(description)}`),
     "END:VEVENT",
@@ -122,11 +173,11 @@ function buildEvent(m, idx, stamp) {
 }
 
 // ---- בניית הלוח המלא ----
-function buildCalendar(matches) {
+function buildCalendar(allMatches, ctx) {
   const stamp = icsUTC(new Date());
-  const events = matches
+  const events = allMatches
     .filter(isInteresting)
-    .map((m, i) => buildEvent(m, matches.indexOf(m), stamp))
+    .map((m, i) => buildEvent(m, i, stamp, ctx))
     .filter(Boolean);
 
   const header = [
@@ -145,10 +196,26 @@ function buildCalendar(matches) {
 }
 
 // ---- main ----
-const matches = await fetchMatches();
-const ics = buildCalendar(matches);
+const allMatches = await fetchMatches();
+
+// מספור רציף לכל המשחקים (1-104) — משמש לבניית מפת הבראקט
+allMatches.forEach((m, i) => { m.num = i + 1; });
+
+// מיפוי num → match
+const matchByNum = {};
+allMatches.forEach(m => { matchByNum[m.num] = m; });
+
+// מיפוי "W{N}" / "L{N}" → המשחק שמכיל את ה-placeholder הזה כצוות
+const feedsInto = {};
+for (const m of allMatches) {
+  for (const key of [m.team1, m.team2]) {
+    if (key && /^[WL]\d+$/.test(key)) feedsInto[key] = m;
+  }
+}
+
+const ctx = { matchByNum, feedsInto };
+const ics = buildCalendar(allMatches, ctx);
 writeFileSync("worldcup.ics", ics, "utf8");
 
-const total = matches.length;
-const selected = matches.filter(isInteresting).length;
-console.log(`נוצר worldcup.ics — ${selected} מתוך ${total} משחקים נבחרו.`);
+const selected = allMatches.filter(isInteresting).length;
+console.log(`נוצר worldcup.ics — ${selected} מתוך ${allMatches.length} משחקים נבחרו.`);
