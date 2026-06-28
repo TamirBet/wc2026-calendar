@@ -137,8 +137,8 @@ function buildCalendar(matches) {
     "METHOD:PUBLISH",
     fold("X-WR-CALNAME:מונדיאל 2026 – משחקים נבחרים"),
     "X-WR-TIMEZONE:Asia/Jerusalem",
-    "X-PUBLISHED-TTL:PT12H",
-    "REFRESH-INTERVAL;VALUE=DURATION:PT12H",
+    "X-PUBLISHED-TTL:PT1H",
+    "REFRESH-INTERVAL;VALUE=DURATION:PT1H",
   ].join("\r\n");
 
   return [header, ...events, "END:VCALENDAR"].join("\r\n") + "\r\n";

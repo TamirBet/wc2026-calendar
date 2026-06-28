@@ -4,7 +4,7 @@ name: Build World Cup 2026 calendar
 # כך הלוח בטלפון מתעדכן אוטומטית כשנבחרות עולות לשלבי הנוקאאוט.
 on:
   schedule:
-    - cron: "0 6,18 * * *"   # 06:00 ו-18:00 UTC כל יום
+    - cron: "0 * * * *"   # כל שעה
   workflow_dispatch: {}       # הרצה ידנית מתפריט Actions
   push:
     branches: [ main ]
